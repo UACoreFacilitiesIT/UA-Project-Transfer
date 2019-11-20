@@ -1,0 +1,7 @@
+include ua_project_transfer/post_containers_batch_template.xml
+include ua_project_transfer/post_samples_batch_template.xml
+include ua_project_transfer/post_containers_template.xml
+include ua_project_transfer/post_project_template.xml
+include ua_project_transfer/post_researcher_template.xml
+include ua_project_transfer/post_samples_template.xml
+include ua_project_transfer/routing_template.xml

@@ -1,0 +1,12 @@
+project_transfer_log*.txt
+*pycache*
+*token*
+wf_steps.py
+log_config.py
+core_specifics.py
+next_steps.py
+price_check.py
+*/templates/*
+dist/
+*egg-info*
+build/
