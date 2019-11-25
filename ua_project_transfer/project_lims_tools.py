@@ -104,12 +104,7 @@ class ProjectLimsApi:
                 lab_uri=lab_uri,
                 email=res.email)
 
-        try:
-            res_post = self.tools.api.post("researchers", res_xml)
-        except requests.exceptions.HTTPError as error:
-            raise POSTException(
-                f"The post for the researcher: {res} did not work. The error"
-                f" message was:\n {error}")
+        res_post = self.tools.api.post("researchers", res_xml)
 
         res_post_soup = BeautifulSoup(res_post, "xml")
         new_researcher_uri = res_post_soup.find("res:researcher")["uri"]
@@ -157,12 +152,7 @@ class ProjectLimsApi:
                 open_date=prj_info.open_date,
                 researcher_uri=prj_info.res.uri)
 
-        try:
-            prj_post = self.tools.api.post("projects", project_xml)
-        except requests.exceptions.HTTPError as error:
-            raise POSTException(
-                f"The post for the project: {prj_info} did not work. The error"
-                f" message was:\n {error}")
+        prj_post = self.tools.api.post("projects", project_xml)
 
         prj_post_soup = BeautifulSoup(prj_post, "xml")
         new_project_uri = prj_post_soup.find("prj:project")["uri"]
@@ -233,29 +223,23 @@ class ProjectLimsApi:
             os.path.split(__file__)[0], "post_containers_batch_template.xml")
 
         # Constructing the xml objects for each artifact.
-        art_xmls = list()
-        for sample in samples:
+        con_xmls = list()
+        con_infos = {
+            (sample.con.name, sample.con.con_type_uri) for sample in samples}
+        for name, uri in con_infos:
             with open(con_template_path, 'r') as file:
                 template = Template(file.read())
-                sample_xml = template.render(
-                    con_name=sample.con.name,
-                    con_type_uri=sample.con.con_type_uri)
-            art_xmls.append(sample_xml)
+                con_xml = template.render(con_name=name, con_type_uri=uri)
+            con_xmls.append(con_xml)
 
         # Build the list that will be rendered by the Jinja template.
         with open(batch_con_template_path, 'r') as file:
             template = Template(file.read())
-            container_xml = template.render(
-                artifact_list='\n'.join(art_xmls))
+            container_xml = template.render(con_list='\n'.join(con_xmls))
 
         # Attempt to post.
-        try:
-            con_post = self.tools.api.post(
-                "containers/batch/create", container_xml)
-        except requests.exceptions.HTTPError as error:
-            raise POSTException(
-                f"The  post for the containers attached to: {samples} samples "
-                f"did not work. The error message was:\n {error}")
+        con_post = self.tools.api.post(
+            "containers/batch/create", container_xml)
 
         # Get return info out of post.
         con_post_soup = BeautifulSoup(con_post, "xml")
@@ -327,13 +311,8 @@ class ProjectLimsApi:
 
         # If the original post or the invalid udf post failed, raise
         # the returned error.
-        try:
-            response = self.tools.api.post("samples/batch/create", batch_soup)
-            samples_post_soup = BeautifulSoup(response, "xml")
-        except requests.exceptions.HTTPError as error:
-            raise POSTException(
-                f"The post for the samples in request {prj_info.uri} did not"
-                f" work. The error was:\n {error}.")
+        response = self.tools.api.post("samples/batch/create", batch_soup)
+        samples_post_soup = BeautifulSoup(response, "xml")
 
         sample_uris = [x["uri"] for x in samples_post_soup.find_all("link")]
 
@@ -385,17 +364,7 @@ class LimsUtility():
         except POSTNameCollision:
             prj_info.res.uri = self.lims_api.get_researcher_uri(
                 prj_info.res)[0]
-            return None
-
-        except POSTException:
-            LOGGER.critical({
-                "template": "critical.html",
-                "content": (
-                    f"There was a problem posting the researcher for the"
-                    f" project {req_id}. The traceback is:"
-                    f"\n {traceback.format_exc()}")
-            })
-            raise
+            return prj_info.res.uri
 
         # Continuation of try, do it this way if the researcher was newly
         # posted in the try block without errors.
@@ -421,30 +390,9 @@ class LimsUtility():
             Sets the passed-in prj_info's open_date to today, and uri to the
                 one just posted.
         """
-        try:
-            prj_info.open_date = datetime.date.today().__str__()
-            prj_uri = self.lims_api.post_project(prj_info)
 
-        except POSTNameCollision as project_error:
-            LOGGER.error({
-                "template": "error.html",
-                "content": (
-                    f"The request {prj_info.name} has been incorrectly"
-                    f" transferred to Clarity. Please fix the request in iLab."
-                    f"The error message is: {project_error} . Feel free to"
-                    f" reach out to the dev team if it doesn't make sense why"
-                    f" there is an issue with the iLab submission.")
-            })
-            raise
-
-        except POSTException:
-            LOGGER.critical({
-                "template": "critical.html",
-                "content": (
-                    f"There was a problem posting the project for the project"
-                    f" {req_id}. The traceback is:\n {traceback.format_exc()}")
-            })
-            raise
+        prj_info.open_date = datetime.date.today().__str__()
+        prj_uri = self.lims_api.post_project(prj_info)
 
         prj_info.uri = prj_uri
         return prj_info.uri
@@ -472,12 +420,6 @@ class LimsUtility():
                 current_form.samples, prj_info.name)
 
         except POSTException:
-            LOGGER.critical({
-                "template": "critical.html",
-                "content": (
-                    f"There was a problem posting a container for the project"
-                    f" {req_id}. The traceback is:\n {traceback.format_exc()}")
-            })
             raise
 
         else:
@@ -516,19 +458,8 @@ class LimsUtility():
         Side Effects:
             Sets the samples' uri's and artifact uri's if it succeeds.
         """
-        try:
-            sample_uris = self.lims_api.batch_post_samples(
-                current_form.samples, prj_info)
-
-        except POSTException:
-            LOGGER.critical({
-                "template": "critical.html",
-                "content": (
-                    f"There was a problem posting one or more samples for the"
-                    f" project {req_id}. The traceback is:"
-                    f"\n {traceback.format_exc()}")
-            })
-            raise
+        sample_uris = self.lims_api.batch_post_samples(
+            current_form.samples, prj_info)
 
         submitted_sample_soup = BeautifulSoup(
             self.lims_api.tools.api.get(sample_uris), "xml")
@@ -586,8 +517,8 @@ class LimsUtility():
             "PROJECT TERMS"]
 
         # Skip the forms that can't provide routing info.
-        if (form.name.strip().upper() in unroutable_forms or
-                "REQUEST A QUOTE" in form.name.strip().upper()):
+        if (form.name.strip().upper() in unroutable_forms
+                or "REQUEST A QUOTE" in form.name.strip().upper()):
             return
         route_function = wf_locations.get(form.name)
 

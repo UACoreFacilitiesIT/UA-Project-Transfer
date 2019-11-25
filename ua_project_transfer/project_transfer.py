@@ -45,15 +45,11 @@ def get_project_history(log_file_name):
     error_projects = dict()
     with open(log_file_name, 'r') as file:
         for line in file.readlines():
-            if "INFO" not in line and "ERROR" not in line:
-                continue
-
-            current_uri = line.split("uri=")[1].split()[0].strip("',")
-            current_uri = re.sub(r"[^0-9]", '', current_uri)
             if "INFO" in line:
-                # The project has been successfully transferred.
+                current_uri = line.split("uri=")[1].split()[0].strip("',")
+                current_uri = re.sub(r"[^0-9]", '', current_uri)
                 processed_projects.add(current_uri)
-            else:
+            elif "ERROR" in line:
                 attempt_time = line.split("datetime(")[1].split("))")[0]
                 attempt_datetime = datetime.datetime.strptime(
                     attempt_time, "%Y, %m, %d, %H, %M, %S, %f")
@@ -181,7 +177,6 @@ def main():
         try:
             res_uri = lims_utility.create_researcher(req_id, prj_info)
             delete_list.append(res_uri)
-
             prj_uri = lims_utility.create_project(req_id, prj_info)
             delete_list.append(prj_uri)
 
@@ -192,7 +187,14 @@ def main():
             sample_uris = lims_utility.create_samples(
                 req_id, prj_info, current_form)
             delete_list.extend(sample_uris)
-        except project_lims_tools.POSTException:
+
+        except BaseException as post_error:
+            LOGGER.error({
+                "template": "error.html",
+                "content": (
+                    f"The request {current_record} has been filled out"
+                    f" incorrectly. The error message is:\n {post_error}")
+            })
             # Delete in reverse order, so Clarity allows you to delete things.
             for item in delete_list[::-1]:
                 lims_utility.lims_api.tools.api.delete(item)
