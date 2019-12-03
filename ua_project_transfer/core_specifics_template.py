@@ -5,7 +5,18 @@ import os
 import logging
 import json
 from ua_ilab_tools import ua_ilab_tools
-from project_transfer import log_config_template, project_lims_tools
+from ua_project_transfer import log_config_template
+from ua_project_transfer import project_lims_tools
+# from ua_project_transfer import next_steps
+
+
+# NOTE: These map exact iLab Form names to the next_steps routing
+# functions you create for your own environment.
+WF_LOCATIONS = dict()
+
+# NOTE: Skip routing for any iLab Form names in this list in your
+# environment.
+UNROUTABLE_FORMS = list()
 
 
 def setup_log():

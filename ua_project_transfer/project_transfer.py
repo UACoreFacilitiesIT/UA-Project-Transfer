@@ -1,12 +1,12 @@
 """Converts unprocessed ilab requests to Clarity projects."""
+import os
+import re
 import argparse
 import logging
 import traceback
 import datetime
-import re
 from dataclasses import dataclass, field
 from ua_ilab_tools import ua_ilab_tools
-from ua_project_transfer import project_lims_tools
 from ua_project_transfer import core_specifics
 from ua_project_transfer import price_check
 
@@ -106,7 +106,16 @@ def main():
 
     # To process the entire history, regardless of the year in the file name.
     to_process = all_req_ids.keys()
-    for year in range(2018, datetime.datetime.today().year + 1):
+
+    min_year = datetime.datetime.today().year
+    directory = sorted(os.listdir())
+    for elem in directory:
+        if elem.startswith("project_transfer_log_"):
+            min_year = int(re.sub(r"[^0-9]", "", elem))
+            break
+
+    # The min_year is this year, unless a smaller year has been found.
+    for year in range(min_year, datetime.datetime.today().year + 1):
         current_log_name = f"project_transfer_log_{year}.txt"
         to_process = set(
             to_process).difference(get_project_history(current_log_name))

@@ -22,14 +22,14 @@ git clone https://github.com/UACoreFacilitiesIT/UA-Project-Transfer.git
 ## Code Example
 
 ```bash
-cd ua_project_transfer
+cd UA-Project-Transfer/ua_project_transfer
 python project_transfer.py --ilab {iLab environment} --lims {LIMS environment}
 ```
 
 ## Tests
 
 ```bash
-cd ua_project_transfer/tests
+cd UA-Project-Transfer/ua_project_transfer/tests
 nosetests test_project_lims_tools.py
 ```
 
@@ -62,6 +62,12 @@ To use project_transfer with default settings in your environment, you will need
 
   - To customize credential harvesting:
         Either use what is written in the template, utilizing the two token files you just created. OR delete those two token files and implement your own credential harvesting method.
+
+  - The wf_locations dictionary must also be updated to map the iLab
+        Form names to their respective next_steps functions.
+
+  - The unroutable_forms list must be updated to contain any iLab Form names
+        you want to skip.
 
 #### Clarity changes
 

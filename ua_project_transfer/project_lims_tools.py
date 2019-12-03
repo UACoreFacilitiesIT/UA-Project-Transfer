@@ -4,11 +4,11 @@ import logging
 import logging.config
 import traceback
 import datetime
-import requests
 from bs4 import BeautifulSoup
 from jinja2 import Template
 from ua_clarity_tools import ua_clarity_tools
-from ua_project_transfer import next_steps
+from ua_project_transfer import core_specifics
+
 
 LOGGER = logging.getLogger(f"__main__.{__name__}")
 
@@ -272,7 +272,7 @@ class ProjectLimsApi:
                 samples to the Clarity REST DB.
 
         Raises:
-            POSTException
+            requests.exceptions.HTTPError
         """
 
         sample_template_path = os.path.join(
@@ -309,8 +309,6 @@ class ProjectLimsApi:
                 if udf_tag["name"] not in valid_udfs:
                     udf_tag.decompose()
 
-        # If the original post or the invalid udf post failed, raise
-        # the returned error.
         response = self.tools.api.post("samples/batch/create", batch_soup)
         samples_post_soup = BeautifulSoup(response, "xml")
 
@@ -496,31 +494,12 @@ class LimsUtility():
             "form": form,
             "env": env}
 
-        wf_locations = {
-            "Bioanalyzer": next_steps.bioanalyzer,
-            "Cell Line Authentication": next_steps.cla,
-            "DNA Extraction": next_steps.extraction,
-            "DNA Quantification": next_steps.quant,
-            "Fragment Analysis": next_steps.frag,
-            "High Volume Sequencing": next_steps.hvs,
-            "Low Volume Sequencing": next_steps.lvs,
-            "Nanostring Sample Information": next_steps.nanostring,
-            "Ribotyping Sample Form": next_steps.ribotyping,
-            "RNA Extraction": next_steps.extraction,
-            "SNP Genotyping Agena": next_steps.agena,
-            "Transgenic Mouse Genotyping": next_steps.tgm,
-        }
-        # Forms that don't have the info to route.
-        unroutable_forms = [
-            "NEXT GEN SAMPLE LIST",
-            "CUSTOM PROJECTS",
-            "PROJECT TERMS"]
-
-        # Skip the forms that can't provide routing info.
-        if (form.name.strip().upper() in unroutable_forms
+        # NOTE: Additionally, skip any forms with "REQUEST A QUOTE" in the form
+        # names, case insensitive.
+        if (form.name.strip().upper() in core_specifics.UNROUTABLE_FORMS
                 or "REQUEST A QUOTE" in form.name.strip().upper()):
             return
-        route_function = wf_locations.get(form.name)
+        route_function = core_specifics.WF_LOCATIONS.get(form.name)
 
         if route_function:
             route_function(route_strategy_payload)

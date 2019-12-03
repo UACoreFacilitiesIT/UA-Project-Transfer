@@ -5,6 +5,7 @@ import os
 import json
 import time
 import unittest
+import requests
 from datetime import datetime
 from jinja2 import Template
 from nose.tools import raises
@@ -249,7 +250,7 @@ class TestProjectLimsTools(unittest.TestCase):
             assert udf_tag is None
 
     @attr("sample")
-    @raises(project_lims_tools.POSTException)
+    @raises(requests.exceptions.HTTPError)
     def test_batch_post_samples_already_in_system(self):
         prj_info = _post_project()
 
@@ -305,15 +306,15 @@ class TestLimsUtility(unittest.TestCase):
             [],
             "")
 
-        res_uri = LIMS_UTIL.create_researcher(0000, prj)
-        assert res_uri is not None
+        res_one_uri = LIMS_UTIL.create_researcher(0000, prj)
+        assert res_one_uri is not None
 
-        res_soup = BeautifulSoup(LIMS_API.tools.api.get(res_uri), "xml")
+        res_soup = BeautifulSoup(LIMS_API.tools.api.get(res_one_uri), "xml")
         res_soup = res_soup.find("res:researcher")
         assert current_time in res_soup.find("first-name").text
 
-        res_uri = LIMS_UTIL.create_researcher(0000, prj)
-        assert res_uri is None
+        res_two_uri = LIMS_UTIL.create_researcher(0000, prj)
+        assert res_two_uri == res_one_uri
 
     def test_create_project_not_in_system(self):
         current_time = str(datetime.now())
@@ -385,7 +386,7 @@ class TestLimsUtility(unittest.TestCase):
         con_names = [con_soup.find("name") for con_soup in cons_soup]
 
         for i, con_name in enumerate(con_names):
-            assert f"Test_{current_time[i]}" in con_name
+            assert con_name.text.split("_")[-1] in current_time
 
     def test_create_samples(self):
         current_time = str(datetime.now())
