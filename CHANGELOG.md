@@ -3,7 +3,17 @@
 All notable changes to this project can be found here.
 The format of this changelog is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-#### 2019/12/3 [1.0.2] (https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
+#### 2019/12/5 [1.0.3](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
+
+Small bug fixes related to file writing and reading.
+
+- Fixed issue with error messages being written to file with double quotes forcing parent string to use single quotes, adding escape characters to other single quotes.
+
+- Refactored gathering of project uris that do not need to be transfered.
+
+- Added try/except catch around a delete operation that would previously halt execution when an error was raised.
+
+#### 2019/12/3 [1.0.2](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
 
 Moved environment specific information to a template file, other small improvements.
 

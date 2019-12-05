@@ -179,7 +179,7 @@ class ProjectLimsApi:
         Raises:
             POSTException
         """
-        parameters = {"name": [sample.con.name for sample in samples]}
+        parameters = {"name": {sample.con.name for sample in samples}}
         exist_con_soup = BeautifulSoup(self.tools.api.get(
             "containers", parameters=parameters), "xml")
         found_cons = [con.name for con in exist_con_soup.find_all("container")]

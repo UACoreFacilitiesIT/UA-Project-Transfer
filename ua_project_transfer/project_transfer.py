@@ -5,6 +5,7 @@ import argparse
 import logging
 import traceback
 import datetime
+import requests
 from dataclasses import dataclass, field
 from ua_ilab_tools import ua_ilab_tools
 from ua_project_transfer import core_specifics
@@ -42,39 +43,30 @@ def get_project_history(log_file_name):
     """
     processed_projects = set()
     error_entries = dict()
-    error_projects = dict()
     with open(log_file_name, 'r') as file:
         for line in file.readlines():
+            # Skip any line without a ProjectRecord.
+            if "uri=" not in line:
+                continue
+
+            current_uri = line.split("uri=")[1].split()[0].strip("',")
+            current_uri = re.sub(r"[^0-9]", '', current_uri)
+
             if "INFO" in line:
-                current_uri = line.split("uri=")[1].split()[0].strip("',")
-                current_uri = re.sub(r"[^0-9]", '', current_uri)
                 processed_projects.add(current_uri)
+
             elif "ERROR" in line:
-                attempt_time = line.split("datetime(")[1].split("))")[0]
+                log_time = line.split("datetime(")[1].split("))")[0]
                 attempt_datetime = datetime.datetime.strptime(
-                    attempt_time, "%Y, %m, %d, %H, %M, %S, %f")
-                error_entries[attempt_datetime] = current_uri
+                    log_time, "%Y, %m, %d, %H, %M, %S, %f")
+                error_entries.setdefault(current_uri, list())
+                error_entries[current_uri].append(attempt_datetime)
 
-    # For all of the 'ERROR' entries, find the newest versions for every
-    # unique uri.
-    for entry_datetime, uri in error_entries.items():
-        if uri in error_projects.values():
-            for project_datetime, project_uri in error_projects.items():
-                if uri == project_uri:
-                    if project_datetime < entry_datetime:
-                        del error_projects[project_datetime]
-                        error_projects[entry_datetime] = uri
-                        break
-        else:
-            error_projects[entry_datetime] = uri
-
-    # Find out if an email and log record should happen.
-    for project_datetime, project_uri in error_projects.items():
-        if (datetime.datetime.now() - project_datetime
+    for uri in error_entries:
+        max_datetime = max(error_entries[uri])
+        if (datetime.datetime.now() - max_datetime
                 < datetime.timedelta(hours=1)):
-            # The project has failed, but it failed too recently
-            # to try again.
-            processed_projects.add(project_uri)
+            processed_projects.add(uri)
 
     return processed_projects
 
@@ -159,11 +151,12 @@ def main():
                     req_id, form_uri, form_soup)
 
             except TypeError as grid_error:
+                grid_error = str(grid_error).replace('"', '\'')
                 LOGGER.error({
                     "template": "error.html",
                     "content": (
                         f"The request {current_record} has been filled out"
-                        f" incorrectly. The error message is:\n {grid_error}")
+                        f" incorrectly. The error message is:\n{grid_error}")
                 })
                 break
 
@@ -206,7 +199,10 @@ def main():
             })
             # Delete in reverse order, so Clarity allows you to delete things.
             for item in delete_list[::-1]:
-                lims_utility.lims_api.tools.api.delete(item)
+                try:
+                    lims_utility.lims_api.tools.api.delete(item)
+                except requests.exceptions.HTTPError:
+                    continue
             break
 
         # Collect and compare the expected and actual prices.
