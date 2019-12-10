@@ -208,7 +208,7 @@ class ProjectLimsApi:
         # Warn of any collisions.
         if con_post_collisions:
             LOGGER.warning({
-                "template": "warning.html",
+                "template": os.path.join("general", "warning.html"),
                 "content": (
                     f"The containers: {con_post_collisions} have the same name"
                     f" as another container in Clarity. These containers have"
@@ -507,7 +507,8 @@ class LimsUtility():
         else:
             req_type = form.request_type
             LOGGER.warning({
-                "template": "route_warning.html",
+                "template": os.path.join(
+                    "project_transfer", "route_warning.html"),
                 "content": (
                     f"The request type {req_type} with the form {form.name}"
                     f" has not yet been implemented. The samples in req:"

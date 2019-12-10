@@ -153,7 +153,7 @@ def main():
             except TypeError as grid_error:
                 grid_error = str(grid_error).replace('"', '\'')
                 LOGGER.error({
-                    "template": "error.html",
+                    "template": os.path.join("project_transfer", "error.html"),
                     "content": (
                         f"The request {current_record} has been filled out"
                         f" incorrectly. The error message is:\n{grid_error}")
@@ -192,7 +192,7 @@ def main():
 
         except BaseException as post_error:
             LOGGER.error({
-                "template": "error.html",
+                "template": os.path.join("project_transfer", "error.html"),
                 "content": (
                     f"The request {current_record} has been filled out"
                     f" incorrectly. The error message is:\n {post_error}")
@@ -228,7 +228,8 @@ def main():
         # stop here if price_check throws an error.
         except BaseException:
             LOGGER.warning({
-                "template": "price_warning.html",
+                "template": os.path.join(
+                    "project_transfer", "price_warning.html"),
                 "content": (
                     f"The project {req_id} prices could not be checked. The"
                     f" traceback is:\n{traceback.format_exc()}")
@@ -245,7 +246,8 @@ def main():
         # stop here if route_strategy throws an error.
         except BaseException:
             LOGGER.warning({
-                "template": "route_warning.html",
+                "template": os.path.join(
+                    "project_transfer", "route_warning.html"),
                 "content": (
                     f"The project {req_id} could not be routed. The traceback"
                     f" is:\n{traceback.format_exc()}")
