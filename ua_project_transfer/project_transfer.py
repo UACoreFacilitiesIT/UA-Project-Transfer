@@ -203,57 +203,57 @@ def main():
                     lims_utility.lims_api.tools.api.delete(item)
                 except requests.exceptions.HTTPError:
                     continue
-            break
 
-        # Collect and compare the expected and actual prices.
-        try:
-            if request_type in charge_per_reaction.keys():
-                req_price, calculated_price = price_check.check_request(
-                    ilab_tools,
-                    req_id,
-                    request_type,
-                    current_form.samples,
-                    rxn_multiplier=charge_per_reaction[request_type])
-            else:
-                req_price, calculated_price = price_check.check_request(
-                    ilab_tools,
-                    req_id,
-                    request_type,
-                    current_form.samples)
+        else:
+            # Collect and compare the expected and actual prices.
+            try:
+                if request_type in charge_per_reaction.keys():
+                    req_price, calculated_price = price_check.check_request(
+                        ilab_tools,
+                        req_id,
+                        request_type,
+                        current_form.samples,
+                        rxn_multiplier=charge_per_reaction[request_type])
+                else:
+                    req_price, calculated_price = price_check.check_request(
+                        ilab_tools,
+                        req_id,
+                        request_type,
+                        current_form.samples)
 
-            current_record.actual_price = req_price
-            current_record.expected_price = calculated_price
+                current_record.actual_price = req_price
+                current_record.expected_price = calculated_price
 
-        # Catch BaseException here because I don't want the program to ever
-        # stop here if price_check throws an error.
-        except BaseException:
-            LOGGER.warning({
-                "template": os.path.join(
-                    "project_transfer", "price_warning.html"),
-                "content": (
-                    f"The project {req_id} prices could not be checked. The"
-                    f" traceback is:\n{traceback.format_exc()}")
-            })
+            # Catch BaseException here because I don't want the program to ever
+            # stop here if price_check throws an error.
+            except BaseException:
+                LOGGER.warning({
+                    "template": os.path.join(
+                        "project_transfer", "price_warning.html"),
+                    "content": (
+                        f"The project {req_id} prices could not be checked."
+                        f" The traceback is:\n{traceback.format_exc()}")
+                })
 
-        sample_art_uris = lims_utility.lims_api.tools.get_arts_from_samples(
-            sample_uris)
-        # Assign those samples to workflows.
-        try:
-            lims_utility.route_strategy(
-                sample_art_uris.values(), current_form, args.lims_env)
+            smp_art_uris = lims_utility.lims_api.tools.get_arts_from_samples(
+                sample_uris)
+            # Assign those samples to workflows.
+            try:
+                lims_utility.route_strategy(
+                    smp_art_uris.values(), current_form, args.lims_env)
 
-        # Catch BaseException here because I don't want the program to ever
-        # stop here if route_strategy throws an error.
-        except BaseException:
-            LOGGER.warning({
-                "template": os.path.join(
-                    "project_transfer", "route_warning.html"),
-                "content": (
-                    f"The project {req_id} could not be routed. The traceback"
-                    f" is:\n{traceback.format_exc()}")
-            })
+            # Catch BaseException here because I don't want the program to ever
+            # stop here if route_strategy throws an error.
+            except BaseException:
+                LOGGER.warning({
+                    "template": os.path.join(
+                        "project_transfer", "route_warning.html"),
+                    "content": (
+                        f"The project {req_id} could not be routed. The"
+                        f" traceback is:\n{traceback.format_exc()}")
+                })
 
-        LOGGER.info(current_record)
+            LOGGER.info(current_record)
 
 
 if __name__ == '__main__':
