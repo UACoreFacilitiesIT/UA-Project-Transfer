@@ -225,12 +225,32 @@ def post_project(prj_data, new_proj):
     delete_list = list()
     try:
         sample_uris = create_clarity_objs(prj_data, delete_list, new_proj)
-    except BaseException as post_error:
+    except BaseException:
+        failed_prjs = [True for entry in delete_list if "projects" in entry]
+        failed_res = [True for entry in delete_list if "researchers" in entry]
+        if failed_res and not failed_prjs:
+            LOGGER.critical({
+                "template": os.path.join("project_transfer", "critical.html"),
+                "content": (
+                    f"A researcher failed to post in project"
+                    f" {prj_data.current_record}")
+            })
+        # Check if a project is in the delete_list.
+        if [True for entry in delete_list if "projects" in entry]:
+            content = (
+                f"The project {prj_data.current_record} could not be"
+                f" transferred.")
+        else:
+            sample_names = [smp.name for smp in prj_data.current_form.samples]
+            content = (
+                f"The samples {sample_names} in project"
+                f" {prj_data.current_record} could not be transferred.")
+        content += (
+            " If the request is filled out correctly, notify"
+            " the dev team.")
         LOGGER.error({
             "template": os.path.join("project_transfer", "error.html"),
-            "content": (
-                f"The request {prj_data.current_record} has been filled out"
-                f" incorrectly. The error message is:\n {post_error}")
+            "content": content
         })
         # Delete the posted items if an error occurs.
         delete_items(delete_list)
@@ -431,9 +451,13 @@ def main():
 
                 # Post the samples without a new project.
                 post_project(prj_data, False)
+
+                LOGGER.info(f"the samples in project: {current_record}")
         else:
             # Post the project and get its price.
             post_project(prj_data, True)
+
+            LOGGER.info(f"the project: {current_record}")
 
 
 if __name__ == '__main__':

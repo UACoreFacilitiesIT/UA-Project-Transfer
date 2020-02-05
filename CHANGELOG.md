@@ -3,6 +3,14 @@
 All notable changes to this project can be found here.
 The format of this changelog is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+#### 2019/2/5/ [1.1.0](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
+
+Added more logging calls to provide more detailed information on a transfer's status.
+
+- Added separate calls for both new project transfers and new sample transfers.
+
+- Made more detailed calls when errors arise during transfers.
+
 #### 2019/12/5 [1.0.3](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
 
 Small bug fixes related to file writing and reading.
