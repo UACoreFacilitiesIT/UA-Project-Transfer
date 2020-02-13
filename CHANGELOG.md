@@ -3,7 +3,17 @@
 All notable changes to this project can be found here.
 The format of this changelog is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-#### 2019/2/5/ [1.1.0](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
+#### 2020/2/17 [1.1.1](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
+
+Added new error checks and logging calls and updated what samples get moved to Clarity.
+
+- Added error checks for errors that stop program execution so following projects can be transferred.
+
+- Will only move samples from iLab to Clarity if the container a sample belongs to is not already in Clarity.
+
+- Added new logging calls which function as detailed information of program execution, and removed those related to the success of project transfers.
+
+#### 2020/2/5/ [1.1.0](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
 
 Added more logging calls to provide more detailed information on a transfer's status.
 

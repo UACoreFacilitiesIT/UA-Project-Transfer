@@ -1,10 +1,10 @@
 """Converts unprocessed ilab requests to Clarity projects."""
 import os
-import argparse
 import logging
-import traceback
+import argparse
 import datetime
 import requests
+import traceback
 from collections import namedtuple
 from bs4 import BeautifulSoup
 from dataclasses import dataclass, field
@@ -99,6 +99,10 @@ def harvest_form(prj_data):
         # that have not yet had a business form attached, and so the request
         # should just be skipped.
         return None
+    except requests.exceptions.HTTPError as error:
+        if error.response.status_code == 404:
+            # Skip requests that were made with different core ids.
+            return None
     # Make sure the current_form is zeroed out between request id's.
     else:
         current_form = None
@@ -120,6 +124,12 @@ def harvest_form(prj_data):
                     f" out incorrectly. The error message is:\n{grid_error}")
             })
             break
+        except ValueError as form_error:
+            LOGGER.error({
+                "template": os.path.join("project_transfer", "error.html"),
+                "content": form_error
+            })
+            continue
 
         # Add the request_type to the form that was just added.
         current_form.request_type = prj_data.request_type
@@ -132,7 +142,7 @@ def harvest_form(prj_data):
     return current_form
 
 
-def samples_differ(prj_smp_limsids, curr_form):
+def samples_differ(prj_smp_limsids, curr_form, prj_limsid):
     """Finds the difference in samples between iLab and Clarity.
 
     Arguments:
@@ -146,7 +156,13 @@ def samples_differ(prj_smp_limsids, curr_form):
         prj_smp_names = list()
     # Otherwise get the samples that are in the project.
     else:
-        prj_smp_names = get_clarity_samples(prj_smp_limsids)
+        prj_smp_info = get_sample_info(prj_smp_limsids, prj_limsid)
+        con_uri_name = get_containers(prj_smp_info)
+        # Update the sample info tuples to have con name.
+        prj_smp_names = list()
+        for smp in prj_smp_info:
+            smp_con_name = con_uri_name[smp.container]
+            prj_smp_names.append(Sample(smp.name, smp.location, smp_con_name))
 
     # Keep only the samples in the current_form that aren't already in Clarity.
     samples_to_add = list()
@@ -156,19 +172,10 @@ def samples_differ(prj_smp_limsids, curr_form):
             samples_to_add.append(sample)
     curr_form.samples = samples_to_add
 
+    check_samples(curr_form, con_uri_name)
 
-def get_clarity_samples(prj_smp_limsids):
-    """Harvest Clarity sample information from previously made project.
 
-    Arguments:
-        prj_smp_limsids (list of strings):
-            The sample limsids of the samples found in the current Clarity
-            project.
-
-    Returns:
-        prj_smp_names (list of Sample namedtuples):
-            List of the relevant information for comparing samples from the
-            sample in Clarity."""
+def get_sample_info(prj_smp_limsids, prj_limsid):
     # Get a list of artifacts based on sample limsids.
     prj_smps = BeautifulSoup(
         CLARITY_API.get(
@@ -177,7 +184,9 @@ def get_clarity_samples(prj_smp_limsids):
         "xml")
 
     # Get a list of the artifact uris.
-    art_uris = [art["uri"] for art in prj_smps.find_all("artifact")]
+    art_uris = [
+        art["uri"] for art in prj_smps.find_all(
+            "artifact") if prj_limsid in art["uri"]]
     # Get each of the artifacts.
     art_soup = BeautifulSoup(CLARITY_API.get(art_uris), "xml")
 
@@ -191,6 +200,10 @@ def get_clarity_samples(prj_smp_limsids):
         smp_con_uri = smp_loc_tag.find("container")["uri"]
         prj_smp_info.append(Sample(smp_name, smp_loc_val, smp_con_uri))
 
+    return prj_smp_info
+
+
+def get_containers(prj_smp_info):
     # Make a set of each container uri that needs to be gotten.
     con_uris = {sample.container for sample in prj_smp_info}
     # Get the containers.
@@ -201,13 +214,30 @@ def get_clarity_samples(prj_smp_limsids):
     for con in con_soup.find_all("con:container"):
         con_uri_name[con["uri"]] = con.find("name").text
 
-    # Update the sample info tuples to have con name.
-    prj_smp_names = list()
-    for smp in prj_smp_info:
-        smp_con_name = con_uri_name[smp.container]
-        prj_smp_names.append(Sample(smp.name, smp.location, smp_con_name))
+    return con_uri_name
 
-    return prj_smp_names
+
+def check_samples(curr_form, con_uri_name):
+    # If the samples to post have a container name that is con_uri_name, remove
+    # it from curr_form.samples
+    container_names = list(con_uri_name.values())
+    smps_to_keep = list()
+    samples_that_differ = list()
+    for sample in curr_form.samples:
+        if sample.con.name not in container_names:
+            smps_to_keep.append(sample)
+        else:
+            samples_that_differ.append(sample.name)
+    if curr_form.samples != smps_to_keep:
+        # error!
+        LOGGER.error({
+            "template": os.path.join("project_transfer", "error.html"),
+            "content": (
+                f"You can't add the samples {samples_that_differ} to the"
+                f" project {curr_form.req_id}. They must have a different"
+                f" container name(s) than {container_names}.")
+        })
+    curr_form.samples = smps_to_keep
 
 
 def post_project(prj_data, new_proj):
@@ -255,10 +285,11 @@ def post_project(prj_data, new_proj):
         # Delete the posted items if an error occurs.
         delete_items(delete_list)
     else:
-        if new_proj:
-            get_price(prj_data)
-        # Route them to respective workflows.
-        route_samples(sample_uris, prj_data)
+        if sample_uris:
+            if new_proj:
+                get_price(prj_data)
+            # Route them to respective workflows.
+            route_samples(sample_uris, prj_data)
 
 
 def create_clarity_objs(prj_data, delete_list, new_proj):
@@ -282,24 +313,47 @@ def create_clarity_objs(prj_data, delete_list, new_proj):
     Side Effects:
         Creates new objects in Clarity.
     """
-    res_uri = LIMS_UTILITY.create_researcher(
-        prj_data.req_id, prj_data.prj_info)
-    delete_list.append(res_uri)
-
     if new_proj:
+        res_uri = LIMS_UTILITY.create_researcher(
+            prj_data.req_id, prj_data.prj_info)
+        delete_list.append(res_uri)
+        LOGGER.info(
+            f"Posted Researcher: Name - {prj_data.prj_info.res.first_name}"
+            f" {prj_data.prj_info.res.last_name}, Limsid -"
+            f" {res_uri.split('/')[-1]}.")
+
         prj_uri = LIMS_UTILITY.create_project(
             prj_data.req_id, prj_data.prj_info)
         delete_list.append(prj_uri)
+        LOGGER.info(
+            f"Posted Project: Name - {prj_data.prj_info.name}, Limsid"
+            f" - {prj_uri.split('/')[-1]}.")
 
-    con_uris = LIMS_UTILITY.create_containers(
-        prj_data.req_id, prj_data.prj_info, prj_data.current_form)
-    delete_list.extend(con_uris)
+    if prj_data.current_form.samples:
+        con_uris = LIMS_UTILITY.create_containers(
+            prj_data.req_id, prj_data.prj_info, prj_data.current_form)
+        delete_list.extend(con_uris)
+        con_name_limsid = dict()
+        for sample in prj_data.current_form.samples:
+            con_limsid = sample.con.uri.split('/')[-1]
+            con_name_limsid[sample.con.name] = con_limsid
+        LOGGER.info(
+            f"Posted Container(s): Name: Limsid pairs - {con_name_limsid}.")
 
-    sample_uris = LIMS_UTILITY.create_samples(
-        prj_data.req_id, prj_data.prj_info, prj_data.current_form)
-    delete_list.extend(sample_uris)
+        sample_uris = LIMS_UTILITY.create_samples(
+            prj_data.req_id, prj_data.prj_info, prj_data.current_form)
+        delete_list.extend(sample_uris)
+        smp_name_limsid = dict()
+        for sample in prj_data.current_form.samples:
+            smp_limsid = sample.uri.split('/')[-1]
+            smp_name_limsid[sample.name] = smp_limsid
+        LOGGER.info(
+            f"Posted Sample(s): Name: Limsid pairs - {smp_name_limsid}.")
 
-    return sample_uris
+        return sample_uris
+
+    else:
+        return list()
 
 
 def delete_items(delete_list):
@@ -311,6 +365,7 @@ def delete_items(delete_list):
     for item in delete_list[::-1]:
         try:
             CLARITY_API.delete(item)
+            LOGGER.info(f"Deleted {item}.")
         except requests.exceptions.HTTPError:
             continue
 
@@ -406,6 +461,10 @@ def main():
         "limsid"] for prj in clarity_projects.find_all("project")}
 
     for req_id in to_process:
+        name = None
+        for key in clarity_prj_ids.keys():
+            if req_id in key:
+                name = key
         prj_data = ProjectData(req_id=req_id)
         # Gather all of the project information from iLab.
         req_soup = all_req_ids[req_id]
@@ -429,12 +488,12 @@ def main():
         prj_data.current_form = current_form
 
         # If the project was already in Clarity, compare the samples.
-        if req_id in clarity_prj_ids.keys():
+        if req_id in clarity_prj_ids.keys() or name:
             # Get the current samples in Clarity's project.
             prj_smps = BeautifulSoup(
                 CLARITY_API.get(
                     f"{CLARITY_API.host}samples",
-                    parameters={"projectlimsid": clarity_prj_ids[req_id]}),
+                    parameters={"projectlimsid": clarity_prj_ids[name]}),
                 "xml")
             prj_smp_limsids = [
                 sample["limsid"] for sample in prj_smps.find_all("sample")]
@@ -443,21 +502,18 @@ def main():
             if len(current_form.samples) != len(prj_smp_limsids):
                 # Update prj_info to have the already made project uri.
                 prj_info.uri = (
-                    f"{CLARITY_API.host}projects/"f"{clarity_prj_ids[req_id]}")
+                    f"{CLARITY_API.host}projects/"f"{clarity_prj_ids[name]}")
 
                 # Update current_form's samples to contain samples that need to
                 # be posted.
-                samples_differ(prj_smp_limsids, current_form)
+                samples_differ(
+                    prj_smp_limsids, current_form, clarity_prj_ids[name])
 
                 # Post the samples without a new project.
                 post_project(prj_data, False)
-
-                LOGGER.info(f"the samples in project: {current_record}")
         else:
             # Post the project and get its price.
             post_project(prj_data, True)
-
-            LOGGER.info(f"the project: {current_record}")
 
 
 if __name__ == '__main__':
