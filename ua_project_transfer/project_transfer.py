@@ -454,7 +454,7 @@ def main():
 
     # Query Clarity for all of the projects in to_process.
     clarity_projects = BeautifulSoup(CLARITY_API.get(
-        f"{CLARITY_API.host}projects", parameters={"name": to_process}), "xml")
+        f"{CLARITY_API.host}projects"), "xml")
 
     # Make a dictionary mapping project name to project limsid.
     clarity_prj_ids = {prj.find("name").text: prj[

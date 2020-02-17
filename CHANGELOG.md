@@ -3,6 +3,12 @@
 All notable changes to this project can be found here.
 The format of this changelog is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+#### 2020/2/17 [1.1.2](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
+
+Bug fix related to changed Clarity project names.
+
+- If project names were changed in Clarity, project_trasnfer would not see that project as already having been moved, and this has been fixed by not querying Clarity projects for iLab request ids.
+
 #### 2020/2/17 [1.1.1](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
 
 Added new error checks and logging calls and updated what samples get moved to Clarity.
