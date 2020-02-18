@@ -134,8 +134,8 @@ def harvest_form(prj_data):
         # Add the request_type to the form that was just added.
         current_form.request_type = prj_data.request_type
 
-        # If the request only has a 'Request a Quote' form, continue.
-        if "REQUEST A QUOTE" in current_form.name.strip().upper():
+        # If the request has a non-queryable (NQ) form, skip it.
+        if "NQ" in current_form.name.strip():
             current_form = None
             continue
 
