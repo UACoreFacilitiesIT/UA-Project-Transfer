@@ -3,6 +3,12 @@
 All notable changes to this project can be found here.
 The format of this changelog is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+#### 2020/2/19 [1.1.4](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
+
+Small bug fix pertaining to variable initialization.
+
+- A previous release caused refactoring of code, which made moved the con_uri_name dictionary from use only internally to being used by check_samples as well. In the case where the Clarity project had no samples, this dictionary was never initialized, causing an error.
+
 #### 2020/2/18 [1.1.3](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
 
 Updated from skipping forms with "Request a Quote" in their name to forms with "NQ" in their name.

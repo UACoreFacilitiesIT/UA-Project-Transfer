@@ -90,8 +90,7 @@ def harvest_form(prj_data):
         custom_form (api_types.CustomForm):
             Object that is populated with all of the information gathered
             from the iLab form.
-            None if nothing is found.
-    """
+            None if nothing is found."""
     try:
         forms_uri_to_soup = ILAB_TOOLS.get_custom_forms(prj_data.req_id)
     except ua_ilab_tools.IlabConfigError:
@@ -150,10 +149,19 @@ def samples_differ(prj_smp_limsids, curr_form, prj_limsid):
             The sample limsids of the samples found in the current Clarity
             project.
         curr_form (api_types.CustomForm):
-            Object containing information relevant to the project from iLab."""
-    # If the Clarity project has no samples, make an empty list.
+            Object containing information relevant to the project from iLab.
+        prj_limsid (string):
+            The limsid found in Clarity for the current request.
+
+    Modifies:
+        curr_form.samples (list of samples):
+            Removes all of the samples from this list which have already been
+            transferred in previous runs or cannot be tranfered because their
+            container already exists in Clarity."""
+    # If the Clarity project has no samples, initialize empty structures.
     if len(prj_smp_limsids) == 0:
         prj_smp_names = list()
+        con_uri_name = dict()
     # Otherwise get the samples that are in the project.
     else:
         prj_smp_info = get_sample_info(prj_smp_limsids, prj_limsid)
@@ -176,6 +184,14 @@ def samples_differ(prj_smp_limsids, curr_form, prj_limsid):
 
 
 def get_sample_info(prj_smp_limsids, prj_limsid):
+    """Gets the Clarity sample information for those already transferred.
+
+    Arguments:
+        prj_smp_limsids (list of strings):
+            The sample limsids of the samples found in the current Clarity
+            project.
+        prj_limsid (string):
+            The limsid found in Clarity for the current request."""
     # Get a list of artifacts based on sample limsids.
     prj_smps = BeautifulSoup(
         CLARITY_API.get(
@@ -204,6 +220,17 @@ def get_sample_info(prj_smp_limsids, prj_limsid):
 
 
 def get_containers(prj_smp_info):
+    """Gets the containers that samples are mapped to in iLab.
+
+    Arguments:
+        prj_smp_info (list of Sample namedTuples):
+            A list of Sample namedTuples containing sample name, sample
+            location value, and sample container uri, for each sample
+            already in Clarity.
+
+    Returns:
+        con_uri_name (dictionary of strings to strings):
+            A mapping of Clarity container uris to name."""
     # Make a set of each container uri that needs to be gotten.
     con_uris = {sample.container for sample in prj_smp_info}
     # Get the containers.
@@ -218,6 +245,18 @@ def get_containers(prj_smp_info):
 
 
 def check_samples(curr_form, con_uri_name):
+    """Removes samples if that sample's container was already transfered.
+
+    Arguments:
+        curr_form (api_types.CustomForm):
+            Object containing information relevant to the project from iLab.
+        con_uri_name (dictionary of strings to strings):
+            A mapping of Clarity container uris to name.
+
+    Modifies:
+        curr_form.samples (list of samples):
+            Removes all samples from this list whose container has already
+            been posted to Clarity."""
     # If the samples to post have a container name that is con_uri_name, remove
     # it from curr_form.samples
     container_names = list(con_uri_name.values())
@@ -311,8 +350,7 @@ def create_clarity_objs(prj_data, delete_list, new_proj):
             List of Clarity sample uris that were posted.
 
     Side Effects:
-        Creates new objects in Clarity.
-    """
+        Creates new objects in Clarity."""
     if new_proj:
         res_uri = LIMS_UTILITY.create_researcher(
             prj_data.req_id, prj_data.prj_info)
