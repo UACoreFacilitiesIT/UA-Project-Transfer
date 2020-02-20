@@ -10,7 +10,7 @@ def readme(filename):
 
 setup(
     name="ua_project_transfer",
-    version="1.1.4",
+    version="1.1.5",
     author="Stephen Stern, Rafael Lopez, Etienne Thompson",
     author_email="sterns1@email.arizona.edu",
     packages=find_packages(),

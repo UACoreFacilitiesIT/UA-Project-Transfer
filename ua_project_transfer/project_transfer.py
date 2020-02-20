@@ -133,10 +133,20 @@ def harvest_form(prj_data):
         # Add the request_type to the form that was just added.
         current_form.request_type = prj_data.request_type
 
-        # If the request has a non-queryable (NQ) form, skip it.
-        if "NQ" in current_form.name.strip():
+        # If the request has a non-queryable (NQ) form or Request a Quote A
+        # Form, skip it.
+        if ("NQ" in current_form.name.strip()
+                or "REQUEST A QUOTE" in current_form.name.strip().upper()):
             current_form = None
             continue
+
+        if not current_form.samples:
+            LOGGER.error({
+                "template": os.path.join("project_transfer", "error.html"),
+                "content": (
+                    f"The {current_form.name} form in request"
+                    f" {current_form.req_id} has no samples.")
+            })
 
     return current_form
 

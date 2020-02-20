@@ -3,6 +3,12 @@
 All notable changes to this project can be found here.
 The format of this changelog is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+#### 2020/2/20 [1.1.5](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
+
+Small error checking fix related to UA-Ilab-Tools v2.0.2 changes.
+
+- "harvest_form" now checks both if the current_form name is a skippable form, and skips that form, as well as check if the returned form has no samples. Previously this was done by UA-Ilab-Tools, but that has been changed with version 2.0.2.
+
 #### 2020/2/19 [1.1.4](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
 
 Small bug fix pertaining to variable initialization.
