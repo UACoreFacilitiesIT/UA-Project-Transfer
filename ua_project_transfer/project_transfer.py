@@ -68,12 +68,10 @@ def update_logger(request_type):
         request_type (string):
             The type of request that was specified in iLab."""
     try:
-        warn_index = LOGGER.handlers.index("warn_handler")
-        err_index = LOGGER.handlers.index("error_handler")
-        LOGGER.handlers[warn_index].toaddrs = core_specifics.get_email(
-            request_type)
-        LOGGER.handlers[err_index].toaddrs = core_specifics.get_email(
-            request_type)
+        # Update the toaddrs of two email handlers.
+        for hand in LOGGER.handlers:
+            if hand.name == "warn_handler" or hand.name == "error_handler":
+                hand.toaddrs = core_specifics.get_entry(request_type)
     except (ValueError, AttributeError):
         # Do nothing if the log has not been configured.
         pass
