@@ -3,6 +3,12 @@
 All notable changes to this project can be found here.
 The format of this changelog is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+#### 2020/2/26 [1.1.6](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
+
+Small fix to updatng the logging config for emails.
+
+- The logging config was never being updated due to silently catching errors. The function has been updated to actually update the logging config.
+
 #### 2020/2/20 [1.1.5](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
 
 Small error checking fix related to UA-Ilab-Tools v2.0.2 changes.
