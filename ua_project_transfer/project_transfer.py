@@ -15,10 +15,8 @@ from ua_project_transfer import price_check
 
 def setup_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--ilab", dest="ilab_env", required=True)
-    parser.add_argument(
-        "--lims", dest="lims_env", required=True)
+    parser.add_argument("--ilab", dest="ilab_env", required=True)
+    parser.add_argument("--lims", dest="lims_env", required=True)
 
     return parser.parse_args()
 
@@ -560,6 +558,8 @@ def main():
         else:
             # Post the project and get its price.
             post_project(prj_data, True)
+
+    LOGGER.info("Finished Run")
 
 
 if __name__ == '__main__':
