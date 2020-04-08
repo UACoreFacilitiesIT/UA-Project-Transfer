@@ -132,7 +132,8 @@ def harvest_form(prj_data):
         # If the request has a non-queryable (NQ) form or Request a Quote A
         # Form, skip it.
         if ("NQ" in current_form.name.strip()
-                or "REQUEST A QUOTE" in current_form.name.strip().upper()):
+                or "REQUEST A QUOTE" in current_form.name.strip().upper()
+                or "DATA ANALYSIS INFO" in current_form.name.strip().upper()):
             current_form = None
             continue
 
