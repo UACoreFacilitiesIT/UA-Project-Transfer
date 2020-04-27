@@ -199,23 +199,21 @@ def get_sample_info(prj_smp_limsids, prj_limsid):
             project.
         prj_limsid (string):
             The limsid found in Clarity for the current request."""
-    # Get a list of artifacts based on sample limsids.
-    prj_smps = BeautifulSoup(
-        CLARITY_API.get(
-            f"{CLARITY_API.host}artifacts",
-            parameters={"samplelimsid": prj_smp_limsids}),
-        "xml")
+    # Create a list of sample uris.
+    smp_uris = [
+        f"{CLARITY_API.host}samples/{limsid}" for limsid in prj_smp_limsids]
+    # Get the samples.
+    smp_soup = BeautifulSoup(CLARITY_API.get(smp_uris), "xml")
 
-    # Get a list of the artifact uris.
+    # Harvest the artifact samples from the samples.
     art_uris = [
-        art["uri"] for art in prj_smps.find_all(
-            "artifact") if prj_limsid in art["uri"]]
-    # Get each of the artifacts.
+        smp.find("artifact")["uri"] for smp in smp_soup.find_all("smp:sample")]
+    # Get the artifacts.
     art_soup = BeautifulSoup(CLARITY_API.get(art_uris), "xml")
 
     # Extract info from the artifacts into tuples.
     prj_smp_info = list()
-    for art in art_soup.find_all("artifact"):
+    for art in art_soup.find_all("art:artifact"):
         # Get the name, location, and container uri.
         smp_name = art.find("name").text
         smp_loc_tag = art.find("location")
@@ -265,21 +263,21 @@ def check_samples(curr_form, con_uri_name):
             Removes all samples from this list whose container has already
             been posted to Clarity."""
     # If the samples to post have a container name that is con_uri_name, remove
-    # it from curr_form.samples
+    # it from curr_form.samples.
     container_names = list(con_uri_name.values())
     smps_to_keep = list()
-    samples_that_differ = list()
+    smps_that_differ = list()
     for sample in curr_form.samples:
         if sample.con.name not in container_names:
             smps_to_keep.append(sample)
         else:
-            samples_that_differ.append(sample.name)
+            smps_that_differ.append(sample.name)
     if curr_form.samples != smps_to_keep:
-        # error!
+        # Notify the user of samples ineligble to transfer.
         LOGGER.error({
             "template": os.path.join("project_transfer", "error.html"),
             "content": (
-                f"You can't add the samples {samples_that_differ} to the"
+                f"You can't add the samples {smps_that_differ} to the"
                 f" project {curr_form.req_id}. They must have a different"
                 f" container name(s) than {container_names}.")
         })
@@ -312,7 +310,7 @@ def post_project(prj_data, new_proj):
                     f" {prj_data.current_record}")
             })
         # Check if a project is in the delete_list.
-        if [True for entry in delete_list if "projects" in entry]:
+        if failed_prjs:
             content = (
                 f"The project {prj_data.current_record} could not be"
                 f" transferred.")
