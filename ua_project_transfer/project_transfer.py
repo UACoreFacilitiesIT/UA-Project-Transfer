@@ -330,7 +330,7 @@ def post_project(prj_data, new_proj):
     else:
         if sample_uris:
             if new_proj:
-                get_price(prj_data)
+                core_specifics.get_price(prj_data)
             # Route them to respective workflows.
             route_samples(sample_uris, prj_data)
 
