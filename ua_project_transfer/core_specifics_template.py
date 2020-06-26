@@ -20,6 +20,16 @@ WF_LOCATIONS = dict()
 UNROUTABLE_FORMS = list()
 
 
+def get_price(prj_data):
+    """Gets the price from iLab and updates the ProjectData.
+
+    Arguments:
+        prj_data (ProjectData):
+            Object containing all of the other necessary information for
+            posting a Clarity project."""
+    pass
+
+
 def setup_log():
     """Sets up the log for the entire module."""
     logging.config.dictConfig(log_config_template.CONFIG)

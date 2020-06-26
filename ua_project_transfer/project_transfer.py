@@ -10,7 +10,6 @@ from bs4 import BeautifulSoup
 from dataclasses import dataclass, field
 from ua_ilab_tools import ua_ilab_tools, api_types
 from ua_project_transfer import core_specifics
-from ua_project_transfer import price_check
 
 
 def setup_arguments():
@@ -411,50 +410,6 @@ def delete_items(delete_list):
             LOGGER.info(f"Deleted {item}.")
         except requests.exceptions.HTTPError:
             continue
-
-
-def get_price(prj_data):
-    """Gets the price from iLab and updates the ProjectData.
-
-    Arguments:
-        prj_data (ProjectData):
-            Object containing all of the other necessary information for
-            posting a Clarity project."""
-    # Setup the charge pricing scheme.
-    charge_per_reaction = {
-        "Transgenic Mouse Genotyping": [
-            "TGM Assay List",
-            "TGM Other Assay List"],
-        "Low Volume Sequencing": ["Primer"]}
-
-    # Collect and compare the expected and actual prices.
-    try:
-        if prj_data.request_type in charge_per_reaction.keys():
-            req_price, calcd_price = price_check.check_request(
-                ILAB_TOOLS,
-                prj_data.req_id,
-                prj_data.req_type,
-                prj_data.current_form.samples,
-                rxn_multiplier=charge_per_reaction[prj_data.request_type])
-        else:
-            req_price, calcd_price = price_check.check_request(
-                ILAB_TOOLS,
-                prj_data.req_id,
-                prj_data.request_type,
-                prj_data.current_form.samples)
-
-        prj_data.current_record.actual_price = req_price
-        prj_data.current_record.expected_price = calcd_price
-
-    # Catch BaseException here because I don't want the program to ever stop
-    # here if price_check throws an error.
-    except BaseException:
-        LOGGER.warning({
-            "template": os.path.join("project_transfer", "price_warning.html"),
-            "content": (
-                f"The project {prj_data.req_id} prices could not be checked."
-                f" The traceback is:\n{traceback.format_exc()}")
-        })
 
 
 def route_samples(sample_uris, prj_data):
