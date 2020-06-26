@@ -503,6 +503,10 @@ def main():
     clarity_prj_ids = {prj.find("name").text: prj[
         "limsid"] for prj in clarity_projects.find_all("project")}
 
+    ua_ilab_tools.extract_custom_forms.update_globals(
+        core_specifics.DISALLOWED_CHARS,
+        core_specifics.REPLACE_CHARS)
+
     for req_id in to_process:
         name = None
         for key in clarity_prj_ids.keys():
