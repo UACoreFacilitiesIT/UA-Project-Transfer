@@ -1,8 +1,6 @@
 import os
 from setuptools import setup, find_packages
 
-print("TEST")
-
 
 def readme(filename):
     full_path = os.path.join(os.path.dirname(__file__), filename)
