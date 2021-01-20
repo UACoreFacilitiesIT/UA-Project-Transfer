@@ -33,7 +33,7 @@ jobs:
         run: |
           git checkout -b master origin/master
           git checkout -b $GITHUB_HEAD_REF origin/$GITHUB_HEAD_REF
-          GIT_COMMIT_LIST=$(git diff-tree --no-commit-id --name-only -r $GITHUB_BASE_REF --)
+          GIT_COMMIT_LIST=$(git diff --name-only $GITHUB_BASE_REF --)
           for FILE in $GIT_COMMIT_LIST
           do
             if [[ "$FILE" == "CHANGELOG.md" ]]; then
