@@ -28,7 +28,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Check for setup.py and CHANGELOG.md
         run: |
-          GIT_COMMIT_LIST=$(git diff --name-only master --)
+          GIT_COMMIT_LIST=$(git diff --name-only origin/master --)
           for FILE in $GIT_COMMIT_LIST
           do
             if [[ "$FILE" == "CHANGELOG.md" ]]; then
