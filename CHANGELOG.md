@@ -5,7 +5,7 @@ The format of this changelog is based on [Keep a Changelog](https://keepachangel
 
 #### 2021/1/20 [1.1.8](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
 
-Updated Github repository to enforce setup.py and CHANGELOG.md changes in PR's.
+Updated Github repository to add github actions for automatic deployment and enforcing setup.py and CHANGELOG.md changes.
 
 #### 2020/2/26 [1.1.6](https://github.com/UACoreFacilitiesIT/UA-Project-Transfer)
 
