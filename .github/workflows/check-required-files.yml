@@ -30,7 +30,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Check for setup.py and CHANGELOG.md
         run: |
-          GIT_COMMIT_LIST=$(git diff-tree --no-commit-id --name-only -r $GITHUB_REF --)
+          GIT_COMMIT_LIST=$(git diff-tree --no-commit-id --name-only -r $GITHUB_BASE_REF --)
           for FILE in $GIT_COMMIT_LIST
           do
             if [[ "$FILE" == "CHANGELOG.md" ]]; then
