@@ -34,7 +34,7 @@ jobs:
             if [[ "$FILE" == "CHANGELOG.md" ]]; then
               CHANGELOG=true
             fi
-            if [[ "$FILE == "setup.py" ]]; then
+            if [[ "$FILE" == "setup.py" ]]; then
               SETUP=true
             fi
           done
