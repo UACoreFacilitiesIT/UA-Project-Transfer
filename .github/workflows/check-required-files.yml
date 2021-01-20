@@ -26,12 +26,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
       # Runs a set of commands using the runners shell
       - name: Check for setup.py and CHANGELOG.md
         run: |
-          git checkout -b master origin/master
-          git checkout -b $GITHUB_REF origin/$GITHUB_REF
           GIT_COMMIT_LIST=$(git diff-tree --no-commit-id --name-only -r $GITHUB_BASE_REF --)
           for FILE in $GIT_COMMIT_LIST
           do
