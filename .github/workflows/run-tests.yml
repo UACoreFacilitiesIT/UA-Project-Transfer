@@ -39,6 +39,7 @@ jobs:
           pip install .
           cd ../UAGC_Applets/ARL_IT
           echo '{"X-STACHE-READ-KEY":"${{ secrets.BOX_STACHE_KEY }}","endpoint":"${{ secrets.BOX_STACHE_ENDPOINT }}"}' > box_stache_token.json
+          cat box_stache_token.json
           python ./box_synchronizer.py --local ../UA-Project-Transfer --remote UA-Project-Transfer
       - name: Run Tests
         run: |
