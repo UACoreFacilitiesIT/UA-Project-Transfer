@@ -43,7 +43,9 @@ jobs:
           pip install "boxsdk[jwt]"
           touch box_stache_token.json
           echo '{"X-STACHE-READ-KEY":"${{ secrets.BOX_STACHE_KEY }}","endpoint":"${{ secrets.BOX_STACHE_ENDPOINT }}"}' > box_stache_token.json
+          echo "Running box_synchronizer"
           python ./box_synchronizer.py --local ../UA-Project-Transfer --remote UA-Project-Transfer
+          echo "Finished running box_synchronizer"
       - name: Run Tests
         run: |
           cd ua_project_transfer/tests
