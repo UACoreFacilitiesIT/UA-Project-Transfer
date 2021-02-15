@@ -15,7 +15,8 @@ jobs:
           sudo apt-get install openconnect jq -y
       - name: Connect to U of A VPN and update stache tokens.
         run: |
-          STACHE_RESPONSE=$(curl -H "X-STACHE-READ-KEY: ${{ secrets.STACHE_READ_KEY }}" https://stache.arizona.edu${{ secrets.STACHE_READ_ENDPOINT }} > /dev/null)
+          curl -H "X-STACHE-READ-KEY: ${{ secrets.STACHE_READ_KEY }}" https://stache.arizona.edu${{ secrets.STACHE_READ_ENDPOINT }} -o curl_output.txt
+          STACHE_RESPONSE=$(cat curl_output.txt)
           STACHE_TOKENS=$(echo "$STACHE_RESPONSE" | jq '.secret')
           JUST_TOKENS=$(echo "$STACHE_TOKENS" | tr -d '\\"n[]')
           IFS=','
