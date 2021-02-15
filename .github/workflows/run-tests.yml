@@ -34,7 +34,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install nose
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install .
           git clone https://${{ secrets.GIT_USERNAME }}:${{ secrets.GIT_PASSWORD }}@github.com/UACoreFacilitiesIT/UAGC_Tools.git
           git clone https://${{ secrets.GIT_USERNAME }}:${{ secrets.GIT_PASSWORD }}@github.com/UACoreFacilitiesIT/UAGC_Applets.git
           cd UAGC_Tools
@@ -46,11 +45,10 @@ jobs:
           echo "Running box_synchronizer"
           python ./box_synchronizer.py --local ../UA-Project-Transfer --remote UA-Project-Transfer
           echo "Finished running box_synchronizer"
+          pip install .
       - name: Run Tests
         run: |
           cd ua_project_transfer/tests
-          ls
-          ls ..
           nosetests
       - name: Disconnect from VPN
         if: always()
