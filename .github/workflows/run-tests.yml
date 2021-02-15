@@ -45,6 +45,7 @@ jobs:
           echo "Running box_synchronizer"
           python ./box_synchronizer.py --local ../UA-Project-Transfer --remote UA-Project-Transfer
           echo "Finished running box_synchronizer"
+          cd ../..
           pip install .
       - name: Run Tests
         run: |
