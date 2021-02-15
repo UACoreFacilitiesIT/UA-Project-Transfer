@@ -1,6 +1,7 @@
 requests
 bs4
 lxml
+sentry_sdk
 ua-stache-api
 ua-ilab-tools
 ua-clarity-api
