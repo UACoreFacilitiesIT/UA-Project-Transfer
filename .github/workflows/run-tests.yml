@@ -49,6 +49,8 @@ jobs:
       - name: Run Tests
         run: |
           cd ua_project_transfer/tests
+          ls
+          ls ..
           nosetests
       - name: Disconnect from VPN
         if: always()
