@@ -38,6 +38,7 @@ jobs:
           cd UAGC_Tools
           pip install .
           cd ../UAGC_Applets/ARL_IT
+          pip install "boxsdk[jwt]"
           touch box_stache_token.json
           echo '{"X-STACHE-READ-KEY":"${{ secrets.BOX_STACHE_KEY }}","endpoint":"${{ secrets.BOX_STACHE_ENDPOINT }}"}' > box_stache_token.json
           python ./box_synchronizer.py --local ../UA-Project-Transfer --remote UA-Project-Transfer
