@@ -13,8 +13,14 @@ jobs:
       - name: Install OpenConnect and JQ
         run: |
           sudo apt-get install openconnect jq -y
+      - name: Get stache entry tokens.
+        uses: wei/curl@v1.1.1
+        with:
+          args: -H "X-STACHE-READ-KEY: ${{ secrets.STACHE_READ_KEY }}" https://stache.arizona.edu${{ secrets.STACHE_READ_ENDPOINT }} -o curl_output.txt
       - name: Connect to U of A VPN and update stache tokens.
         run: |
+          cat curl_output.txt
+          rm curl_output.txt
           STACHE_RESPONSE=$(curl -s -H "X-STACHE-READ-KEY: ${{ secrets.STACHE_READ_KEY }}" https://stache.arizona.edu${{ secrets.STACHE_READ_ENDPOINT }})
           STACHE_TOKENS=$(echo "$STACHE_RESPONSE" | jq '.secret')
           JUST_TOKENS=$(echo "$STACHE_TOKENS" | tr -d '\\"n[]')
