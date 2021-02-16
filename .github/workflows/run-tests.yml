@@ -16,7 +16,7 @@ jobs:
       - name: Get stache entry tokens.
         uses: wei/curl@v1.1.1
         with:
-          args: -H "X-STACHE-READ-KEY: ${{ secrets.STACHE_READ_KEY }}" https://stache.arizona.edu${{ secrets.STACHE_READ_ENDPOINT }} -o curl_output.txt
+          args: -H "X-STACHE-READ-KEY:${{ secrets.STACHE_READ_KEY }}" https://stache.arizona.edu${{ secrets.STACHE_READ_ENDPOINT }} -o curl_output.txt
       - name: Connect to U of A VPN and update stache tokens.
         run: |
           cat curl_output.txt
