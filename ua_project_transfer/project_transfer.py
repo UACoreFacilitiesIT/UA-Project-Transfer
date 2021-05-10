@@ -94,9 +94,8 @@ def harvest_form(prj_data):
         # should just be skipped.
         return None
     except requests.exceptions.HTTPError as error:
-        if error.response.status_code == 404:
-            # Skip requests that were made with different core ids.
-            return None
+        # Skip requests that were made with different core ids.
+        return None
     # Make sure the current_form is zeroed out between request id's.
     else:
         current_form = None
